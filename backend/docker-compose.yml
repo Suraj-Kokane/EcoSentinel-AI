@@ -1,0 +1,36 @@
+# EcoSentinel AI — local development stack (PostgreSQL 16)
+# Usage: docker compose up -d
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: ecosentinel-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ecosentinel
+      POSTGRES_PASSWORD: ecosentinel
+      POSTGRES_DB: ecosentinel
+    ports:
+      - '5432:5432'
+    volumes:
+      - ecosentinel_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ecosentinel -d ecosentinel']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: ecosentinel-pgadmin
+    restart: unless-stopped
+    depends_on:
+      - postgres
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@ecosentinel.in
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - '5050:80'
+
+volumes:
+  ecosentinel_pgdata:

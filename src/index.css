@@ -1,0 +1,200 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: #04070e;
+  color: #e6f0ff;
+  font-family: 'Inter Variable', Inter, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  overflow-x: hidden;
+}
+
+/* ---- scrollbars ---- */
+::-webkit-scrollbar {
+  width: 9px;
+  height: 9px;
+}
+::-webkit-scrollbar-track {
+  background: #060d1a;
+}
+::-webkit-scrollbar-thumb {
+  background: #16304f;
+  border-radius: 5px;
+  border: 2px solid #060d1a;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #1e3a5f;
+}
+
+/* ---- shared primitives ---- */
+@layer components {
+  .es-panel {
+    @apply bg-panel text-ink rounded-md;
+    border: 1px solid #16304f;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+  }
+  .es-panel-header {
+    @apply flex items-center justify-between px-3 py-2;
+    border-bottom: 1px solid #122540;
+  }
+  .es-title {
+    @apply font-display font-semibold tracking-wide text-sub;
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+  .es-kicker {
+    @apply font-mono text-faint;
+    font-size: 10px;
+    letter-spacing: 0.08em;
+  }
+  .es-hairline {
+    border-top: 1px solid #122540;
+  }
+}
+
+/* corner-bracket frame used on hero/ops elements */
+.corner-frame {
+  position: relative;
+}
+.corner-frame::before,
+.corner-frame::after {
+  content: '';
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border: 1px solid #2c8cff;
+  opacity: 0.55;
+  pointer-events: none;
+}
+.corner-frame::before {
+  top: -1px;
+  left: -1px;
+  border-right: none;
+  border-bottom: none;
+}
+.corner-frame::after {
+  bottom: -1px;
+  right: -1px;
+  border-left: none;
+  border-top: none;
+}
+
+/* scanline sweep for command-center feel */
+.scanline {
+  position: relative;
+  overflow: hidden;
+}
+.scanline::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    115deg,
+    transparent 30%,
+    rgba(44, 140, 255, 0.06) 45%,
+    rgba(34, 211, 238, 0.04) 50%,
+    transparent 65%
+  );
+  animation: sweep 3.4s linear infinite;
+  pointer-events: none;
+}
+
+/* subtle top-glow for critical panels */
+.glow-crit {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    0 0 0 1px rgba(239, 68, 68, 0.25),
+    0 0 30px rgba(239, 68, 68, 0.12);
+}
+
+/* ---- leaflet overrides (mission-control dark theme) ---- */
+.leaflet-container {
+  background: #05070e;
+  font-family: 'Inter Variable', Inter, sans-serif;
+}
+.es-tooltip {
+  background: #0a1526 !important;
+  border: 1px solid #1e3a5f !important;
+  color: #e6f0ff !important;
+  border-radius: 8px !important;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6) !important;
+  padding: 0 !important;
+  min-width: 220px;
+}
+.es-tooltip::before {
+  display: none !important;
+}
+.leaflet-popup-content-wrapper {
+  background: #0a1526;
+  color: #e6f0ff;
+  border: 1px solid #1e3a5f;
+  border-radius: 8px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
+}
+.leaflet-popup-tip {
+  background: #0a1526;
+  border: 1px solid #1e3a5f;
+}
+.leaflet-popup-content {
+  margin: 0;
+}
+.leaflet-control-zoom a {
+  background: #0a1526 !important;
+  color: #8aa6c8 !important;
+  border: 1px solid #1e3a5f !important;
+}
+.leaflet-control-zoom a:hover {
+  background: #0e2038 !important;
+  color: #e6f0ff !important;
+}
+.leaflet-control-attribution {
+  background: rgba(4, 7, 14, 0.7) !important;
+  color: #54719b !important;
+  font-size: 9px !important;
+}
+.leaflet-control-attribution a {
+  color: #8aa6c8 !important;
+}
+
+/* map dark vignette for depth */
+.es-vignette {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 400;
+  box-shadow: inset 0 0 120px rgba(0, 0, 0, 0.7);
+}
+
+.pulse-ring {
+  animation: pulseDot 1.7s ease-in-out infinite;
+}
+
+@keyframes chip {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.25;
+  }
+  100% {
+    opacity: 1;
+  }
+}

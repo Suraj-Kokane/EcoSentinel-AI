@@ -1,0 +1,284 @@
+// EcoSentinel AI — Prisma schema (PostgreSQL 16)
+// 12 hazard risk scores per State + EHI, plus full monitoring & response models.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ----------------------------------------------------------------------------
+// Enums (aligned to the frontend hazard keys & risk engine)
+// ----------------------------------------------------------------------------
+
+enum Role {
+  ADMIN
+  AUTHORITY
+  CITIZEN
+}
+
+enum HazardType {
+  flood
+  cyclone
+  heatwave
+  coldWave
+  earthquake
+  landslide
+  fire
+  airPollution
+  waterPollution
+  drought
+  infrastructure
+  other
+}
+
+enum Severity {
+  low
+  moderate
+  high
+  critical
+}
+
+enum AlertStatus {
+  active
+  acknowledged
+  dispatched
+  resolved
+}
+
+enum ReportStatus {
+  submitted
+  under_review
+  verified
+  dispatched
+  resolved
+}
+
+enum NodeStatus {
+  online
+  offline
+  degraded
+}
+
+enum InfraType {
+  dam
+  hospital
+  school
+  power
+  railway
+  highway
+  airport
+}
+
+// ----------------------------------------------------------------------------
+// Models
+// ----------------------------------------------------------------------------
+
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  password  String
+  role      Role     @default(CITIZEN)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  reports CitizenReport[]
+
+  @@map("users")
+}
+
+model State {
+  id                  String  @id @default(cuid())
+  name                String  @unique
+  overallRisk         Int     @default(0)
+  floodRisk           Int     @default(0)
+  fireRisk            Int     @default(0)
+  pollutionRisk       Int     @default(0)
+  earthquakeRisk      Int     @default(0)
+  cycloneRisk         Int     @default(0)
+  landslideRisk       Int     @default(0)
+  heatwaveRisk        Int     @default(0)
+  droughtRisk         Int     @default(0)
+  waterPollutionRisk  Int     @default(0)
+  coldWaveRisk        Int     @default(0)
+  infrastructureRisk  Int     @default(0)
+  ehiScore            Int     @default(0)
+
+  districts District[]
+
+  @@map("states")
+}
+
+model District {
+  id          String @id @default(cuid())
+  name        String
+  stateId     String
+  overallRisk Int    @default(0)
+  ehiScore    Int    @default(0)
+
+  state State @relation(fields: [stateId], references: [id], onDelete: Cascade)
+
+  @@unique([stateId, name])
+  @@index([stateId])
+  @@map("districts")
+}
+
+model Alert {
+  id          String      @id @default(cuid())
+  title       String
+  description String      @default("")
+  state       String      @default("")
+  district    String      @default("")
+  hazardType  HazardType  @default(other)
+  severity    Severity    @default(moderate)
+  status      AlertStatus @default(active)
+  createdAt   DateTime    @default(now())
+
+  @@index([status])
+  @@index([hazardType])
+  @@index([state])
+  @@map("alerts")
+}
+
+model CitizenReport {
+  id          String       @id @default(cuid())
+  title       String
+  description String       @default("")
+  imageUrl    String?      @default("")
+  latitude    Float
+  longitude   Float
+  hazardType  HazardType   @default(other)
+  status      ReportStatus @default(submitted)
+  createdAt   DateTime     @default(now())
+  userId      String?
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([status])
+  @@index([hazardType])
+  @@map("citizen_reports")
+}
+
+model SensorNode {
+  id             String     @id @default(cuid())
+  deviceId       String     @unique
+  location       String     @default("")
+  state          String     @default("")
+  district       String     @default("")
+  battery        Int        @default(100)
+  signalStrength Int        @default(-50) // RSSI dBm
+  status         NodeStatus @default(online)
+  lastSeen       DateTime   @default(now())
+
+  readings SensorReading[]
+
+  @@index([status])
+  @@map("sensor_nodes")
+}
+
+model SensorReading {
+  id           String   @id @default(cuid())
+  sensorNodeId String
+  temperature  Float?
+  humidity     Float?
+  airQuality   Float?
+  waterLevel   Float?
+  rainfall     Float?
+  timestamp    DateTime @default(now())
+
+  node SensorNode @relation(fields: [sensorNodeId], references: [id], onDelete: Cascade)
+
+  @@index([sensorNodeId, timestamp])
+  @@map("sensor_readings")
+}
+
+model Earthquake {
+  id        String   @id @default(cuid())
+  magnitude Float
+  depth     Float?
+  latitude  Float
+  longitude Float
+  location  String   @default("")
+  eventTime DateTime
+
+  @@index([eventTime])
+  @@map("earthquakes")
+}
+
+model FireHotspot {
+  id         String   @id @default(cuid())
+  latitude   Float
+  longitude  Float
+  intensity  Int      @default(0)
+  source     String   @default("NASA FIRMS")
+  detectedAt DateTime @default(now())
+
+  @@index([detectedAt])
+  @@map("fire_hotspots")
+}
+
+model WeatherData {
+  id          String   @id @default(cuid())
+  state       String   @default("")
+  district    String   @default("")
+  temperature Float?
+  humidity    Float?
+  rainfall    Float?
+  windSpeed   Float?
+  timestamp   DateTime @default(now())
+
+  @@index([timestamp])
+  @@map("weather_data")
+}
+
+model AirQuality {
+  id        String   @id @default(cuid())
+  state     String   @default("")
+  district  String   @default("")
+  aqi       Int      @default(0)
+  pm25      Float?
+  pm10      Float?
+  co        Float?
+  no2       Float?
+  so2       Float?
+  timestamp DateTime @default(now())
+
+  @@index([timestamp])
+  @@index([state])
+  @@map("air_quality")
+}
+
+model Infrastructure {
+  id        String    @id @default(cuid())
+  name      String
+  type      InfraType @default(hospital)
+  state     String    @default("")
+  district  String    @default("")
+  latitude  Float     @default(0)
+  longitude Float     @default(0)
+  riskScore Int       @default(0)
+
+  @@index([type])
+  @@index([state])
+  @@map("infrastructure")
+}
+
+model ResourceDeployment {
+  id             String     @id @default(cuid())
+  hazardType     HazardType @default(other)
+  severity       Severity   @default(moderate)
+  ndrfTeams      Int        @default(0)
+  ambulances     Int        @default(0)
+  fireBrigades   Int        @default(0)
+  reliefCamps    Int        @default(0)
+  medicalTeams   Int        @default(0)
+  recommendation String     @default("")
+  createdAt      DateTime   @default(now())
+
+  @@index([hazardType])
+  @@map("resource_deployments")
+}
